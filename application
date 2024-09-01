@@ -1,0 +1,79 @@
+!pip install Pillow
+!pip install rembg
+!pip install cvzone mediapipe
+!pip install opencv-python-headless numpy
+!pip install pilgram
+!pip install ipywidgets
+
+import cv2
+import numpy as np
+from cvzone.SelfiSegmentationModule import SelfiSegmentation
+from PIL import Image, ImageEnhance, ImageFilter
+import pilgram
+import os
+import ipywidgets as widgets
+from IPython.display import display, clear_output, Image as IPImage
+from google.colab import files
+
+# Create necessary directories
+os.makedirs('blured_background', exist_ok=True)
+os.makedirs('image_cutout', exist_ok=True)
+os.makedirs('final_image', exist_ok=True)
+os.makedirs('Uploaded_Image', exist_ok=True)
+
+# Initialize segmentor
+segmentor = SelfiSegmentation()
+
+# Widgets
+upload_button = widgets.FileUpload(accept='image/*', multiple=False, description='Upload Photo', button_style='info')
+background_blur_button = widgets.Button(description="Background Blur")
+remove_background_button = widgets.Button(description="Remove Background")
+edit_image_button = widgets.Button(description="Edit Image")
+filter_dropdown = widgets.Dropdown(
+    options=[
+        ('Select Filter', None),
+        ('Inkwell', 'Inkwell Filter'),
+        ('Lo-Fi', 'Lo-Fi Filter'),
+        ('Moon', 'Moon Filter'),
+        ('Nashville', 'Nashville Filter'),
+        ('Toaster', 'Toaster Filter')
+    ],
+    description='Filter:',
+    disabled=False
+)
+blur_radius_slider = widgets.IntSlider(value=0, min=0, max=30, step=1, description='Blur Radius')
+cutout_threshold_slider = widgets.FloatSlider(value=0.4, min=0.0, max=1.0, step=0.01, description='Cutout Threshold')
+brightness_slider = widgets.FloatSlider(value=1.0, min=0.0, max=2.0, step=0.01, description='Brightness')
+contrast_slider = widgets.FloatSlider(value=1.0, min=0.0, max=2.0, step=0.01, description='Contrast')
+highlights_slider = widgets.FloatSlider(value=1.0, min=0.0, max=2.0, step=0.01, description='Highlights')
+white_slider = widgets.FloatSlider(value=1.0, min=0.0, max=2.0, step=0.01, description='White')
+black_slider = widgets.FloatSlider(value=1.0, min=0.0, max=2.0, step=0.01, description='Black')
+
+# Display upload button initially
+display(upload_button)
+
+# Global variable to store image path
+image_path = ''
+current_option = ''
+
+def reset_default(button):
+    blur_radius_slider.value = 0
+    cutout_threshold_slider.value = 0.4
+    brightness_slider.value = 1.0
+    contrast_slider.value = 1.0
+    highlights_slider.value = 1.0
+    white_slider.value = 1.0
+    black_slider.value = 1.0
+    update_images(current_option)
+
+def download_image(filename):
+    files.download(filename)
+
+def handle_upload(change):
+    global image_path
+    uploaded_file = list(upload_button.value.values())[0]
+    image_path = '/content/Uploaded_Image/' + uploaded_file['metadata']['name']
+    with open(image_path, 'wb') as f:
+        f.write(uploaded_file['content'])
+    clear_output(wait=True)
+    display_main_menu()
