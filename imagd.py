@@ -34,3 +34,16 @@ def update_images(option=None):
         merged_image = apply_image_enhancements(merged_image)
         cv2.imwrite('final_image/merged_image.png', merged_image)
         img_filename = 'final_image/merged_image.png'
+
+    elif option == 'Remove Background':
+        mask = segmentor.removeBG(image, black_background, cutThreshold=cutout_threshold)
+        cleaned_mask = cv2.morphologyEx(cv2.morphologyEx(cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY), cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8)), cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+        final_segmented_image = cv2.bitwise_and(image, image, mask=cleaned_mask)
+        cv2.imwrite('image_cutout/segmented_image.png', final_segmented_image)
+        img_filename = 'image_cutout/segmented_image.png'
+
+    elif option == 'Edit Image':
+        merged_image = cv2.imread('final_image/merged_image.png')
+        merged_image = apply_image_enhancements(merged_image)
+        cv2.imwrite('final_image/edited_image.png', merged_image)
+        img_filename = 'final_image/edited_image.png'
